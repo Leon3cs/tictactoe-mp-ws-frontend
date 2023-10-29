@@ -1,0 +1,62 @@
+.grid {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    gap: 10px 10px;
+}
+
+.tile {
+    font-size: xx-large;
+    font-family: sans-serif;
+    text-align: center;
+    border: solid 1px black;
+    border-radius: 25%;
+    padding: 10px;
+    min-height: 40px;
+    min-width: 40px;
+    width: auto;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.result {
+    margin-top: 20px;
+    font-size: xx-large;
+    font-family: sans-serif;
+    text-align: center;
+}
+
+.score {
+    font-size: xx-large;
+    font-family: sans-serif;
+    text-align: center;
+}
+
+.player {
+    font-size: large;
+    font-family: sans-serif;
+}
+
+.points {
+    font-size: xx-large;
+    font-family: sans-serif;
+}
+
+.scoreContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.results {
+    width: 190px;
+}
+
+.actionsContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+}
