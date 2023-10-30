@@ -62,7 +62,7 @@ export default function handler(req, res) {
     console.log("Socket already initialized");
   } else {
     console.log("Socket initializing");
-    console.log("Socket", rest.socket.server)
+    console.log("Socket", res.socket.server)
     const io = new Server(res.socket.server);
     res.socket.server.io = io;
 
