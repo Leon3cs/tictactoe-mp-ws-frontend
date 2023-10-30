@@ -14,6 +14,8 @@ const INITIAL_STATE = () => [
   [0, 0, 0],
 ];
 
+let matches = [];
+
 const checkForWinners = (grid) => {
   const resultRow = isWinRow(grid);
   const resultCol = isWinCol(grid);
@@ -57,12 +59,11 @@ const checkForWinners = (grid) => {
 };
 
 export default function handler(req, res) {
-  let matches = [];
   if (res.socket.server.io) {
     console.log("Socket already initialized");
   } else {
     console.log("Socket initializing");
-    console.log("Socket", res.socket.server)
+    console.log("Total active matches", matches.length)
     const io = new Server(res.socket.server);
     res.socket.server.io = io;
 
