@@ -63,7 +63,6 @@ export default function handler(req, res) {
     console.log("Socket already initialized");
   } else {
     console.log("Socket initializing");
-    console.log("Total active matches", matches.length)
     const io = new Server(res.socket.server);
     res.socket.server.io = io;
 
