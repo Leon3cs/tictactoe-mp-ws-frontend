@@ -23,7 +23,7 @@ const checkForWinners = (grid) => {
   let result = {
     cross: false,
     circle: false,
-    remainingTiles: 0
+    remainingTiles: 0,
   };
 
   if (
@@ -103,71 +103,73 @@ export default function handler(req, res) {
 
       socket.on("player_move", (position, matchId) => {
         const matchIndex = matches.findIndex(
-        (item) => item.matchId === matchId
+          (item) => item.matchId === matchId
         );
-        const match = matches[matchIndex]
-        const grid = match.state
-        if(match.round == socket.id){
-            if(match.first == socket.id){
-                grid[position.row][position.col] = CIRCLE
-            }else{
-                grid[position.row][position.col] = CROSS
-            }
+        const match = matches[matchIndex];
+        const grid = match.state;
+        if (match.round == socket.id) {
+          if (match.first == socket.id) {
+            grid[position.row][position.col] = CIRCLE;
+          } else {
+            grid[position.row][position.col] = CROSS;
+          }
         }
-        const result = checkForWinners(grid)
+        const result = checkForWinners(grid);
 
-        if(result.cross || result.circle){
-            match.endgame = true
-            match.crossWin = result.cross
-            match.circleWin = result.circle
-            match.draw = false
-            if(result.circle){
-                match.circleScore += 1
-            }
-            if(result.cross){
-                match.crossScore += 1
-            }
-        }else if(result.remainingTiles == 0){
-            match.endgame = true
-            match.crossWin = false
-            match.circleWin = false
-            match.draw = true
-        }else{
-            match.endgame = false
-            match.crossWin = false
-            match.circleWin = false
-            match.draw = false
-            match.turn = !match.turn
-            const oponent = match.players.filter(player => player !== socket.id)
-            match.round = oponent[0]
-            match.state = grid
+        if (result.cross || result.circle) {
+          match.endgame = true;
+          match.crossWin = result.cross;
+          match.circleWin = result.circle;
+          match.draw = false;
+          if (result.circle) {
+            match.circleScore += 1;
+          }
+          if (result.cross) {
+            match.crossScore += 1;
+          }
+        } else if (result.remainingTiles == 0) {
+          match.endgame = true;
+          match.crossWin = false;
+          match.circleWin = false;
+          match.draw = true;
+        } else {
+          match.endgame = false;
+          match.crossWin = false;
+          match.circleWin = false;
+          match.draw = false;
+          match.turn = !match.turn;
+          const oponent = match.players.filter(
+            (player) => player !== socket.id
+          );
+          match.round = oponent[0];
+          match.state = grid;
         }
 
-        matches[matchIndex] = match
+        matches[matchIndex] = match;
 
-        socket.emit('update_match', match)
-        socket.to(`room${matchId}`).emit('update_match', match)
+        socket.emit("update_match", match);
+        socket.to(`room${matchId}`).emit("update_match", match);
       });
 
-      socket.on('match_reset', (matchId) => {
+      socket.on("match_reset", (matchId) => {
         const matchIndex = matches.findIndex(
-            (item) => item.matchId === matchId
-            );
-            console.log(INITIAL_STATE())
-        const match = matches[matchIndex]
-        match.turn = false
-        match.round = match.first
-        match.state = INITIAL_STATE()
-        match.endgame = false
-        match.circleWin = false
-        match.crossWin = false
-        match.draw = false
+          (item) => item.matchId === matchId
+        );
+        console.log(INITIAL_STATE());
+        const match = matches[matchIndex];
+        match.turn = false;
+        match.round = match.first;
+        match.state = INITIAL_STATE();
+        match.endgame = false;
+        match.circleWin = false;
+        match.crossWin = false;
+        match.draw = false;
 
-        matches[matchIndex] = match
+        matches[matchIndex] = match;
 
-        socket.emit('update_match', match)
-        socket.to(`room${matchId}`).emit('update_match', match)
-      })
+        socket.emit("update_match", match);
+        socket.to(`room${matchId}`).emit("update_match", match);
+      });
 
       socket.conn.on("close", (reason) => {
         const matchIndex = matches.findIndex((item) =>

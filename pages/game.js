@@ -4,7 +4,7 @@ import Tile from "../components/tile";
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useRouter } from "next/navigation";
-import { checkPosition } from './tic-tac-toe'
+import { checkPosition } from "./tic-tac-toe";
 
 let socket;
 
@@ -19,9 +19,9 @@ export default function Game() {
   const [circleScore, setCircleScore] = useState(0);
   const [crossScore, setCrossScore] = useState(0);
   const [player, setPlayer] = useState("");
-  const [playerId, setPlayerId] = useState('')
+  const [playerId, setPlayerId] = useState("");
   const [round, setRound] = useState("");
-  const [matchId, setMatchId] = useState('')
+  const [matchId, setMatchId] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function Game() {
 
       socket.on("player_joined", (match) => {
         setEnableBoard(true);
-        setMatchId(match.matchId)
+        setMatchId(match.matchId);
         setGrid(match.state);
         setTurn(match.turn);
         setEndGame(match.endgame);
@@ -56,7 +56,7 @@ export default function Game() {
         setEnableBoard(false);
       });
 
-      socket.on('update_grid', match => {
+      socket.on("update_grid", (match) => {
         setGrid([...match.state]);
         setTurn(match.turn);
         setEndGame(match.endgame);
@@ -66,9 +66,9 @@ export default function Game() {
         setCircleWin(match.circleWin);
         setDraw(match.draw);
         setRound(match.round);
-      })
+      });
 
-      socket.on('update_match', (match) => {
+      socket.on("update_match", (match) => {
         setGrid([...match.state]);
         setTurn(match.turn);
         setEndGame(match.endgame);
@@ -78,7 +78,7 @@ export default function Game() {
         setCircleWin(match.circleWin);
         setDraw(match.draw);
         setRound(match.round);
-      })
+      });
 
       return null;
     };
@@ -86,13 +86,13 @@ export default function Game() {
   }, []);
 
   const updateGrid = (row, col) => {
-    if((playerId === round) && (checkPosition(row, col, grid, turn, endGame))){
-      socket.emit('player_move', {row, col}, matchId)
+    if (playerId === round && checkPosition(row, col, grid, turn, endGame)) {
+      socket.emit("player_move", { row, col }, matchId);
     }
   };
 
   const resetGame = () => {
-    socket.emit('match_reset', matchId)
+    socket.emit("match_reset", matchId);
   };
 
   const quitGame = () => {
@@ -105,7 +105,9 @@ export default function Game() {
       {enableBoard ? (
         <main>
           <div>
-            <p className={game.score}>You are <strong>{player}</strong></p>
+            <p className={game.score}>
+              You are <strong>{player}</strong>
+            </p>
           </div>
           <div>
             <p className={game.player}>Score</p>

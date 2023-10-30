@@ -1,4 +1,5 @@
 {
+  "name": "tictactoe-muiltiplayer",
   "private": true,
   "scripts": {
     "build": "next build",
