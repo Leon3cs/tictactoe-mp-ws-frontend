@@ -2,6 +2,7 @@ FROM node:20.9.0-slim AS base
 
 FROM base AS deps
 
+
 WORKDIR /app
 
 COPY package*.json ./
