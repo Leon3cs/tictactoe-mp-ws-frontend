@@ -6,13 +6,13 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Create Next App</title>
+        <title>TicTacToe Multiplayer</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main>
         <div>
-          <Link href="/game">Enter a game</Link>
+          <Link href="/game">Join a match</Link>
         </div>
       </main>
 
