@@ -12,7 +12,7 @@ export default function Home() {
 
       <main>
         <div>
-          <Link href="/game">Join a match</Link>
+          <Link href="/game?createMatch=true">Join a match</Link>
         </div>
       </main>
 

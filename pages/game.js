@@ -3,7 +3,7 @@ import game from "../styles/TicTacToe.module.css";
 import Tile from "../components/tile";
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { checkPosition } from "./tic-tac-toe";
 
 let socket;
@@ -22,6 +22,7 @@ export default function Game() {
   const [playerId, setPlayerId] = useState("");
   const [round, setRound] = useState("");
   const [matchId, setMatchId] = useState("");
+  const [href, setHref] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -33,19 +34,33 @@ export default function Game() {
         setPlayerId(socket.id);
       });
 
-      socket.on("player_joined", (match) => {
+      const qs = new URLSearchParams(window.location.search);
+      const matchIdToJoin = qs.get("joinMatch");
+      const shouldCreateMatch = qs.get("createMatch");
+
+      if (shouldCreateMatch) {
+        socket.emit("create_match");
+      } else if (matchIdToJoin) {
+        socket.emit("join_match", matchIdToJoin);
+      }
+
+      socket.on("match_data", (matchId) => {
+        setHref(`${window.location.origin}/game?joinMatch=${matchId}`);
+      });
+
+      socket.on("player_joined", (data) => {
         setEnableBoard(true);
-        setMatchId(match.matchId);
-        setGrid(match.state);
-        setTurn(match.turn);
-        setEndGame(match.endgame);
-        setCrossScore(match.crossScore);
-        setCircleScore(match.circleScore);
-        setCrossWin(match.crossWin);
-        setCircleWin(match.circleWin);
-        setDraw(match.draw);
-        setRound(match.round);
-        if (match.first === socket.id) {
+        setMatchId(data.match.gridId);
+        setGrid(data.grid);
+        setTurn(data.match.turn);
+        setEndGame(data.match.endgame);
+        setCrossScore(data.match.crossScore);
+        setCircleScore(data.match.circleScore);
+        setCrossWin(data.match.crossWin);
+        setCircleWin(data.match.circleWin);
+        setDraw(data.match.draw);
+        setRound(data.match.round);
+        if (data.match.first === socket.id) {
           setPlayer("O");
         } else {
           setPlayer("X");
@@ -56,28 +71,28 @@ export default function Game() {
         setEnableBoard(false);
       });
 
-      socket.on("update_grid", (match) => {
-        setGrid([...match.state]);
-        setTurn(match.turn);
-        setEndGame(match.endgame);
-        setCrossScore(match.crossScore);
-        setCircleScore(match.circleScore);
-        setCrossWin(match.crossWin);
-        setCircleWin(match.circleWin);
-        setDraw(match.draw);
-        setRound(match.round);
+      socket.on("update_grid", (data) => {
+        setGrid([...data.grid]);
+        setTurn(data.match.turn);
+        setEndGame(data.match.endgame);
+        setCrossScore(data.match.crossScore);
+        setCircleScore(data.match.circleScore);
+        setCrossWin(data.match.crossWin);
+        setCircleWin(data.match.circleWin);
+        setDraw(data.match.draw);
+        setRound(data.match.round);
       });
 
-      socket.on("update_match", (match) => {
-        setGrid([...match.state]);
-        setTurn(match.turn);
-        setEndGame(match.endgame);
-        setCrossScore(match.crossScore);
-        setCircleScore(match.circleScore);
-        setCrossWin(match.crossWin);
-        setCircleWin(match.circleWin);
-        setDraw(match.draw);
-        setRound(match.round);
+      socket.on("update_match", (data) => {
+        setGrid([...data.grid]);
+        setTurn(data.match.turn);
+        setEndGame(data.match.endgame);
+        setCrossScore(data.match.crossScore);
+        setCircleScore(data.match.circleScore);
+        setCrossWin(data.match.crossWin);
+        setCircleWin(data.match.circleWin);
+        setDraw(data.match.draw);
+        setRound(data.match.round);
       });
 
       return null;
@@ -87,7 +102,7 @@ export default function Game() {
 
   const updateGrid = (row, col) => {
     if (playerId === round && checkPosition(row, col, grid, turn, endGame)) {
-      socket.emit("player_move", { row, col }, matchId);
+      socket.emit("player_move", { row, col }, matchId, player);
     }
   };
 
@@ -156,6 +171,7 @@ export default function Game() {
       ) : (
         <main>
           <p>WAITING FOR OTHER PLAYER</p>
+          <p>{href}</p>
         </main>
       )}
       <footer>

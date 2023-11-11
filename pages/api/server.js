@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+import axios from "axios";
 
 export default function handler(req, res) {
   if (res.socket.server.io) {
@@ -9,128 +10,67 @@ export default function handler(req, res) {
     res.socket.server.io = io;
 
     io.on("connection", async (socket) => {
-      let match;
-      match = matches.find((match) => match.players.length < 2);
-
-      if (!match) {
-        match = {
-          matchId: matches.length + 1,
+      socket.on("create_match", async () => {
+        const response = await axios.post("http://localhost:8000/match", {
           players: [socket.id],
-          turn: false,
-          first: socket.id,
-          round: socket.id,
-          state: INITIAL_STATE(),
-          endgame: false,
-          circleWin: false,
-          crossWin: false,
-          draw: false,
-          circleScore: 0,
-          crossScore: 0,
-        };
+        });
 
-        matches.push(match);
-        await socket.join(`room${match.matchId}`);
-      } else {
-        const matchIndex = matches.findIndex(
-          (item) => item.matchId === match.matchId
+        const matchId = response.data.match.gridId;
+
+        socket.join(matchId);
+        io.to(matchId).emit("match_data", matchId);
+      });
+
+      socket.on("join_match", async (matchId) => {
+        const response = await axios.put(
+          `http://localhost:8000/match/${matchId}/add/player`,
+          { socketId: socket.id }
         );
-        let players = match.players;
-        players.push(socket.id);
-        matches[matchIndex].players = players;
 
-        await socket.join(`room${match.matchId}`);
-        socket.emit("player_joined", match);
-        socket.to(`room${match.matchId}`).emit("player_joined", match);
-      }
+        socket.join(matchId);
+        io.to(matchId).emit("player_joined", response.data);
+      });
 
-      socket.on("player_move", (position, matchId) => {
-        const matchIndex = matches.findIndex(
-          (item) => item.matchId === matchId
-        );
-        const match = matches[matchIndex];
-        const grid = match.state;
-        if (match.round == socket.id) {
-          if (match.first == socket.id) {
-            grid[position.row][position.col] = CIRCLE;
-          } else {
-            grid[position.row][position.col] = CROSS;
-          }
-        }
-        const result = checkForWinners(grid);
+      socket.on("player_move", async ({ row, col }, matchId, player) => {
+        let match;
 
-        if (result.cross || result.circle) {
-          match.endgame = true;
-          match.crossWin = result.cross;
-          match.circleWin = result.circle;
-          match.draw = false;
-          if (result.circle) {
-            match.circleScore += 1;
-          }
-          if (result.cross) {
-            match.crossScore += 1;
-          }
-        } else if (result.remainingTiles == 0) {
-          match.endgame = true;
-          match.crossWin = false;
-          match.circleWin = false;
-          match.draw = true;
-        } else {
-          match.endgame = false;
-          match.crossWin = false;
-          match.circleWin = false;
-          match.draw = false;
-          match.turn = !match.turn;
-          const oponent = match.players.filter(
-            (player) => player !== socket.id
+        if (player === "O") {
+          const response = await axios.patch(
+            `http://localhost:8000/match/${matchId}/move/circle`,
+            { row, col, playerId: socket.id }
           );
-          match.round = oponent[0];
-          match.state = grid;
-        }
 
-        matches[matchIndex] = match;
-
-        socket.emit("update_match", match);
-        socket.to(`room${matchId}`).emit("update_match", match);
-      });
-
-      socket.on("match_reset", (matchId) => {
-        const matchIndex = matches.findIndex(
-          (item) => item.matchId === matchId
-        );
-        console.log(INITIAL_STATE());
-        const match = matches[matchIndex];
-        match.turn = false;
-        match.round = match.first;
-        match.state = INITIAL_STATE();
-        match.endgame = false;
-        match.circleWin = false;
-        match.crossWin = false;
-        match.draw = false;
-
-        matches[matchIndex] = match;
-
-        socket.emit("update_match", match);
-        socket.to(`room${matchId}`).emit("update_match", match);
-      });
-
-      socket.conn.on("close", (reason) => {
-        const matchIndex = matches.findIndex((item) =>
-          item.players.includes(socket.id)
-        );
-        let match = matches[matchIndex];
-        const players = match.players.filter((player) => player !== socket.id);
-        if (players.length) {
-          match.players = players;
-          match.turn = false;
-          match.state = INITIAL_STATE();
-          match.fisrt = players[0];
+          match = response.data
         } else {
-          matches = matches.filter((item) => item.matchId !== match.matchId);
+          const response = await axios.patch(
+            `http://localhost:8000/match/${matchId}/move/cross`,
+            { row, col, playerId: socket.id }
+          );
+
+          match = response.data
         }
 
-        socket
-          .to(`room${match.matchId}`)
-          .emit("player_disconnect", match, reason);
+        io.to(matchId).emit("update_grid", match);
+      });
+
+      socket.on("match_reset", async (matchId) => {
+        const response = await axios.put(`http://localhost:8000/match/${matchId}/reset`)
+
+        io.to(matchId).emit('update_match', response.data)
+      });
+
+      socket.conn.on("close", async (reason) => {
+        const matchData = await axios.get(
+          `http://localhost:8000/match/player/${socket.id}`
+        );
+
+        if (matchData.data) {
+          const response = await axios.put(
+            `http://localhost:8000/match/${matchData.data.matchId}/remove/player`,
+            { socketId: socket.id }
+          );
+          io.to(matchData.data.matchId).emit("player_disconnect");
+        }
       });
     });
   }
