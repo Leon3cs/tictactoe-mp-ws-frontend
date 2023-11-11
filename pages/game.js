@@ -3,8 +3,9 @@ import game from "../styles/TicTacToe.module.css";
 import Tile from "../components/tile";
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { checkPosition } from "./tic-tac-toe";
+import Link from "next/link";
 
 let socket;
 
@@ -23,6 +24,7 @@ export default function Game() {
   const [round, setRound] = useState("");
   const [matchId, setMatchId] = useState("");
   const [href, setHref] = useState("");
+  const [isInvalidMatch, setIsInvalidMatch] = useState(false)
   const router = useRouter();
 
   useEffect(() => {
@@ -42,6 +44,7 @@ export default function Game() {
         socket.emit("create_match");
       } else if (matchIdToJoin) {
         socket.emit("join_match", matchIdToJoin);
+        setHref(`${window.location.origin}/game?joinMatch=${matchIdToJoin}`)
       }
 
       socket.on("match_data", (matchId) => {
@@ -94,6 +97,10 @@ export default function Game() {
         setDraw(data.match.draw);
         setRound(data.match.round);
       });
+
+      socket.on('invalid_match', () => {
+        setIsInvalidMatch(true)
+      })
 
       return null;
     };
@@ -170,8 +177,20 @@ export default function Game() {
         </main>
       ) : (
         <main>
-          <p>WAITING FOR OTHER PLAYER</p>
-          <p>{href}</p>
+          {!!isInvalidMatch ? (
+            <div>
+              <p className={game.score}>MATCH NOT FOUND</p>
+              <p className={game.message}>Please quit this game and create a new one by clicking in the button below</p>
+              <div className={game.quitActionContainer}>
+                <Link className={game.quitAction} href='/'>Return to main page</Link>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className={game.score}>WAITING FOR OTHER PLAYER</p>
+              <p>{href}</p>
+            </div>
+          )}
         </main>
       )}
       <footer>

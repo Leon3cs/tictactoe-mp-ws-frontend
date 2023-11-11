@@ -44,6 +44,20 @@
     font-family: sans-serif;
 }
 
+.message {
+    font-family: sans-serif;
+}
+
+.quitActionContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quitAction {
+    font-family: sans-serif;
+}
+
 .scoreContainer {
     display: flex;
     align-items: center;

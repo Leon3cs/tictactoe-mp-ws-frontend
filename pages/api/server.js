@@ -22,13 +22,17 @@ export default function handler(req, res) {
       });
 
       socket.on("join_match", async (matchId) => {
-        const response = await axios.put(
-          `http://localhost:8000/match/${matchId}/add/player`,
-          { socketId: socket.id }
-        );
-
-        socket.join(matchId);
-        io.to(matchId).emit("player_joined", response.data);
+        try{
+          const response = await axios.put(
+            `http://localhost:8000/match/${matchId}/add/player`,
+            { socketId: socket.id }
+          );
+  
+          socket.join(matchId);
+          io.to(matchId).emit("player_joined", response.data);
+        }catch(error){
+          socket.emit('invalid_match')
+        }
       });
 
       socket.on("player_move", async ({ row, col }, matchId, player) => {
@@ -60,16 +64,20 @@ export default function handler(req, res) {
       });
 
       socket.conn.on("close", async (reason) => {
-        const matchData = await axios.get(
-          `http://localhost:8000/match/player/${socket.id}`
-        );
-
-        if (matchData.data) {
-          const response = await axios.put(
-            `http://localhost:8000/match/${matchData.data.matchId}/remove/player`,
-            { socketId: socket.id }
+        try{
+          const matchData = await axios.get(
+            `http://localhost:8000/match/player/${socket.id}`
           );
-          io.to(matchData.data.matchId).emit("player_disconnect");
+  
+          if (matchData.data) {
+            const response = await axios.put(
+              `http://localhost:8000/match/${matchData.data.matchId}/remove/player`,
+              { socketId: socket.id }
+            );
+            io.to(matchData.data.matchId).emit("player_disconnect");
+          }
+        }catch(error){
+          
         }
       });
     });
