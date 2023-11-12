@@ -6,6 +6,7 @@ import { io } from "socket.io-client";
 import { useRouter } from "next/navigation";
 import { checkPosition } from "./tic-tac-toe";
 import Link from "next/link";
+import QRCode from "qrcode";
 
 let socket;
 
@@ -24,7 +25,8 @@ export default function Game() {
   const [round, setRound] = useState("");
   const [matchId, setMatchId] = useState("");
   const [href, setHref] = useState("");
-  const [isInvalidMatch, setIsInvalidMatch] = useState(false)
+  const [isInvalidMatch, setIsInvalidMatch] = useState(false);
+  const [copyButtonText, setCopyButtonText] = useState("Copy link");
   const router = useRouter();
 
   useEffect(() => {
@@ -43,12 +45,23 @@ export default function Game() {
       if (shouldCreateMatch) {
         socket.emit("create_match");
       } else if (matchIdToJoin) {
+        const url = `${window.location.origin}/game?joinMatch=${matchIdToJoin}`;
+        setHref(url);
+
+        const canvasEl = document.getElementById("qr");
+
+        await QRCode.toCanvas(canvasEl, url);
+
         socket.emit("join_match", matchIdToJoin);
-        setHref(`${window.location.origin}/game?joinMatch=${matchIdToJoin}`)
       }
 
-      socket.on("match_data", (matchId) => {
-        setHref(`${window.location.origin}/game?joinMatch=${matchId}`);
+      socket.on("match_data", async (matchId) => {
+        const url = `${window.location.origin}/game?joinMatch=${matchId}`;
+        setHref(url);
+
+        const canvasEl = document.getElementById("qr");
+
+        await QRCode.toCanvas(canvasEl, url);
       });
 
       socket.on("player_joined", (data) => {
@@ -98,9 +111,9 @@ export default function Game() {
         setRound(data.match.round);
       });
 
-      socket.on('invalid_match', () => {
-        setIsInvalidMatch(true)
-      })
+      socket.on("invalid_match", () => {
+        setIsInvalidMatch(true);
+      });
 
       return null;
     };
@@ -120,6 +133,18 @@ export default function Game() {
   const quitGame = () => {
     socket.disconnect();
     router.push("/");
+  };
+
+  const copyUrl = async () => {
+    const blob = new Blob([href], { type: 'text/plain'})
+
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        [blob.type]: blob
+      })
+    ]);
+
+    setCopyButtonText("Copied!");
   };
 
   return (
@@ -180,15 +205,29 @@ export default function Game() {
           {!!isInvalidMatch ? (
             <div>
               <p className={game.score}>MATCH NOT FOUND</p>
-              <p className={game.message}>Please quit this game and create a new one by clicking in the button below</p>
+              <p className={game.message}>
+                Please quit this game and create a new one by clicking in the
+                button below
+              </p>
               <div className={game.quitActionContainer}>
-                <Link className={game.quitAction} href='/'>Return to main page</Link>
+                <Link className={game.quitAction} href="/">
+                  Return to main page
+                </Link>
               </div>
             </div>
           ) : (
             <div>
               <p className={game.score}>WAITING FOR OTHER PLAYER</p>
-              <p>{href}</p>
+              <p className={game.message}>
+                Let someone join by scanning this QR code
+              </p>
+              <div className={game.matchLink}>
+                <canvas id="qr"></canvas>
+              </div>
+              <p className={game.message}>Or copy the match link below</p>
+              <div className={game.matchLink}>
+                <button onClick={copyUrl}>{copyButtonText}</button>
+              </div>
             </div>
           )}
         </main>

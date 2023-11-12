@@ -58,6 +58,12 @@
     font-family: sans-serif;
 }
 
+.matchLink {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .scoreContainer {
     display: flex;
     align-items: center;
