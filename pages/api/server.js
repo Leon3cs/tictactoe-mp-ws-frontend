@@ -1,6 +1,8 @@
 import { Server } from "socket.io";
 import axios from "axios";
 
+const BASE_URL = 'http://api:8000'
+
 export default function handler(req, res) {
   if (res.socket.server.io) {
     console.log("Socket already initialized");
@@ -11,7 +13,7 @@ export default function handler(req, res) {
 
     io.on("connection", async (socket) => {
       socket.on("create_match", async () => {
-        const response = await axios.post("http://localhost:8000/match", {
+        const response = await axios.post(`${BASE_URL}/match`, {
           players: [socket.id],
         });
 
@@ -24,7 +26,7 @@ export default function handler(req, res) {
       socket.on("join_match", async (matchId) => {
         try{
           const response = await axios.put(
-            `http://localhost:8000/match/${matchId}/add/player`,
+            `${BASE_URL}/match/${matchId}/add/player`,
             { socketId: socket.id }
           );
   
@@ -40,14 +42,14 @@ export default function handler(req, res) {
 
         if (player === "O") {
           const response = await axios.patch(
-            `http://localhost:8000/match/${matchId}/move/circle`,
+            `${BASE_URL}/match/${matchId}/move/circle`,
             { row, col, playerId: socket.id }
           );
 
           match = response.data
         } else {
           const response = await axios.patch(
-            `http://localhost:8000/match/${matchId}/move/cross`,
+            `${BASE_URL}/match/${matchId}/move/cross`,
             { row, col, playerId: socket.id }
           );
 
@@ -58,7 +60,7 @@ export default function handler(req, res) {
       });
 
       socket.on("match_reset", async (matchId) => {
-        const response = await axios.put(`http://localhost:8000/match/${matchId}/reset`)
+        const response = await axios.put(`${BASE_URL}/match/${matchId}/reset`)
 
         io.to(matchId).emit('update_match', response.data)
       });
@@ -66,12 +68,12 @@ export default function handler(req, res) {
       socket.conn.on("close", async (reason) => {
         try{
           const matchData = await axios.get(
-            `http://localhost:8000/match/player/${socket.id}`
+            `${BASE_URL}/match/player/${socket.id}`
           );
   
           if (matchData.data) {
             const response = await axios.put(
-              `http://localhost:8000/match/${matchData.data.matchId}/remove/player`,
+              `${BASE_URL}/match/${matchData.data.matchId}/remove/player`,
               { socketId: socket.id }
             );
             io.to(matchData.data.matchId).emit("player_disconnect");
