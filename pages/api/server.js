@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
 import axios from "axios";
 
-const BASE_URL = 'http://api:8000'
+const BASE_URL = `http://api:8080`
 
 export default function handler(req, res) {
   if (res.socket.server.io) {
