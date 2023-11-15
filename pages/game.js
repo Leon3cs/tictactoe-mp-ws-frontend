@@ -1,12 +1,12 @@
 import styles from "../styles/Home.module.css";
 import game from "../styles/TicTacToe.module.css";
 import Tile from "../components/tile";
+import WaitScreen from "../components/waitScreen";
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useRouter } from "next/navigation";
 import { checkPosition } from "./tic-tac-toe";
 import Link from "next/link";
-import QRCode from "qrcode";
 
 let socket;
 
@@ -48,20 +48,12 @@ export default function Game() {
         const url = `${window.location.origin}/game?joinMatch=${matchIdToJoin}`;
         setHref(url);
 
-        const canvasEl = document.getElementById("qr");
-
-        await QRCode.toCanvas(canvasEl, url);
-
         socket.emit("join_match", matchIdToJoin);
       }
 
       socket.on("match_data", async (matchId) => {
         const url = `${window.location.origin}/game?joinMatch=${matchId}`;
         setHref(url);
-
-        const canvasEl = document.getElementById("qr");
-
-        await QRCode.toCanvas(canvasEl, url);
       });
 
       socket.on("player_joined", (data) => {
@@ -83,7 +75,7 @@ export default function Game() {
         }
       });
 
-      socket.on("player_disconnect", (match, reason) => {
+      socket.on("player_disconnect", async (match, reason) => {
         setEnableBoard(false);
       });
 
@@ -216,19 +208,7 @@ export default function Game() {
               </div>
             </div>
           ) : (
-            <div>
-              <p className={game.score}>WAITING FOR OTHER PLAYER</p>
-              <p className={game.message}>
-                Let someone join by scanning this QR code
-              </p>
-              <div className={game.matchLink}>
-                <canvas id="qr"></canvas>
-              </div>
-              <p className={game.message}>Or copy the match link below</p>
-              <div className={game.matchLink}>
-                <button onClick={copyUrl}>{copyButtonText}</button>
-              </div>
-            </div>
+            <WaitScreen url={href} copyUrl={copyUrl} copyButtonText={copyButtonText} />
           )}
         </main>
       )}

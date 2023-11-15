@@ -76,7 +76,7 @@ export default function handler(req, res) {
               `${BASE_URL}/match/${matchData.data.matchId}/remove/player`,
               { socketId: socket.id }
             );
-            io.to(matchData.data.matchId).emit("player_disconnect");
+            io.to(matchData.data.matchId).emit("player_disconnect", matchData.data, reason);
           }
         }catch(error){
           
