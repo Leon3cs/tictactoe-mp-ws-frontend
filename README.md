@@ -58,11 +58,11 @@ When a player enters a game, the server will try to find a game that has a playe
 
 ## Player events
 
-When a player makes a move, a client-side validation occurs to ensure the move is to a empty tile on the grid, if it is a valid move, then an event is dispatched to the websocket server, updating the grid, checking if there is any winners or a draw, and dispatching an event for the players in this match the updated game state, so the front end can refresh it's interface
+When a player makes a move, a client-side validation occurs to ensure the move is to a empty tile on the grid, if it is a valid move, then an event is dispatched to the websocket server, updating the grid, checking if there is any winners or a draw, and dispatching an event for the players in this match with the updated game state, so the front end can refresh it's interface
 
 When a match finishes, both players are presented to two options: 
 - "reset game" will return the match to it's initial state and the players can have another round, this option will trigger an event for the server to reset the match state and dispatch an event to the players that updates the current match state on the client-side.
-- "quit game" will trigger an event for the player that clicked it to remove is socket id from the players list of that match, so it becomes available for another player to join while the player that stayed waits for an oponent.
+- "quit game" will trigger an event for the player that clicked it to remove is socket id from the players list of that match, so it becomes available for another player to join while the player that stayed waits for an oponent. If the player that stayed in the match alone quits the page, an event similar to  "quit game" will trigger that will delete the grid and match object for that match without players 
 
 ## Disconnect behaviour
 
@@ -73,3 +73,6 @@ If any player leave a match, either by losing connection, close the browser tab,
 1. Initial commit
     - Client-side only version of the tic tac toe
     - Multiplayer version but matchmaking with random players only
+
+2. tictactoe-mp-ws-backend merge
+    - The backend service that previously was created as a seperate container available at [this repo](https://github.com/Leon3cs/tictactoe-mp-ws-backend) was merged to this application. 
